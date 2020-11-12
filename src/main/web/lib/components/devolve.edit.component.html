@@ -1,0 +1,327 @@
+<div class="lamis-edit-form">
+    <div class="lamis-edit-form-container">
+        <form name="form" role="form" novalidate (ngSubmit)="save()" #devolveForm="ngForm">
+            <mat-card class="default">
+                <mat-card-header>
+                </mat-card-header>
+                <mat-card-content *ngIf="patient">
+                    <div>
+                        <mat-form-field class="full-width" *ngIf="entity && dateRegistration">
+                            <input matInput [matDatepicker]="picker"
+                                   placeholder="Date of Devolvement"
+                                   [(ngModel)]="entity.dateDevolved"
+                                   (dateChange)="dateDevolvedChanged($event.value)"
+                                   #visit="ngModel"
+                                   [max]="today"
+                                   [min]="dateRegistration"
+                                   [disabled]="!!entity.dateDiscontinued"
+                                   name="visit"
+                                   required>
+                            <mat-datepicker-toggle
+                                    matSuffix
+                                    [for]="picker">
+                            </mat-datepicker-toggle>
+                            <mat-datepicker #picker></mat-datepicker>
+                            <mat-error
+                                    *ngIf="visit.errors && (visit.dirty || visit.touched) && (visit.errors.required)">
+                                Date of devolve is required
+                            </mat-error>
+                            <mat-error
+                                    *ngIf="visit.errors && (visit.dirty || visit.touched) && (visit.errors.min)">
+                                Date of devolve cannot be before {{dateRegistration | date: 'dd MMM, yyyy'}}
+                            </mat-error>
+                            <mat-error
+                                    *ngIf="visit.errors && (visit.dirty || visit.touched) && (visit.errors.max)">
+                                Date of devolve cannot be in the future
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div>
+                        <mat-form-field class="full-width">
+                            <mat-select [(ngModel)]="entity.dmocType"
+                                        placeholder="Type of DMOC"
+                                        (selectionChange)="dmocChanged($event.value)"
+                                        #dmoc="ngModel" required name="dmoc">
+                                <mat-option></mat-option>
+                                <mat-option *ngFor="let type of dmocTypes"
+                                            [value]="type.value">{{type.name}}</mat-option>
+                            </mat-select>
+                            <mat-error
+                                    *ngIf="dmoc.errors && (dmoc.dirty || dmoc.touched) && (dmoc.errors.required)">
+                                Type of DMOC is required
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <mat-form-field class="full-width">
+                                <mat-label>ARV Regimen</mat-label>
+                                <input matInput disabled [value]="relatedPharmacy && relatedPharmacy.regimen || ''">
+                            </mat-form-field>
+                        </div>
+                        <div class="col-md-6">
+                            <mat-form-field class="full-width">
+                                <mat-label>Date of Current ARV Regimen</mat-label>
+                                <input matInput disabled
+                                       value="{{relatedPharmacy && relatedPharmacy.dateVisit || ''}} ">
+                            </mat-form-field>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <mat-form-field class="full-width">
+                                <mat-label>Current Viral Load</mat-label>
+                                <input matInput disabled [value]="relatedViralLoad && relatedViralLoad.value || ''">
+                            </mat-form-field>
+                        </div>
+                        <div class="col-md-6">
+                            <mat-form-field class="full-width">
+                                <mat-label>Date of Viral Load</mat-label>
+                                <input matInput disabled
+                                       value="{{relatedViralLoad && relatedViralLoad.dateResultReceived || ''}} ">
+                            </mat-form-field>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <mat-form-field class="full-width">
+                                <mat-label>Current CD4</mat-label>
+                                <input matInput disabled [value]="relatedCD4 && relatedCD4.value || ''">
+                            </mat-form-field>
+                        </div>
+                        <div class="col-md-6">
+                            <mat-form-field class="full-width">
+                                <mat-label>Date of CD4</mat-label>
+                                <input matInput disabled
+                                       value="{{relatedCD4 && relatedCD4.dateResultReceived || ''}} ">
+                            </mat-form-field>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <mat-form-field class="full-width">
+                                <mat-label>Current Clinical Stage</mat-label>
+                                <input matInput disabled [value]="relatedClinic && relatedClinic.clinicStage || ''">
+                            </mat-form-field>
+                        </div>
+                        <div class="col-md-6">
+                            <mat-form-field class="full-width">
+                                <mat-label>Date of Clinical Stage</mat-label>
+                                <input matInput disabled
+                                       value="{{relatedClinic && relatedClinic.dateVisit | date: 'dd MMM, yyyy' || null}} ">
+                            </mat-form-field>
+                        </div>
+                    </div>
+                    <ng-container *ngIf="minNextAppointment">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <mat-form-field class="full-width">
+                                    <input matInput [matDatepicker]="picker2"
+                                           placeholder="Date of next ARV Refill"
+                                           [(ngModel)]="entity.dateNextRefill"
+                                           #visit2="ngModel"
+                                           [min]="minNextAppointment"
+                                           [max]="maxNextVisit"
+                                           name="visit2">
+                                    <mat-datepicker-toggle
+                                            matSuffix
+                                            [for]="picker2">
+                                    </mat-datepicker-toggle>
+                                    <mat-datepicker #picker2></mat-datepicker>
+                                    <mat-error
+                                            *ngIf="visit2.errors && (visit2.dirty || visit2.touched) && (visit2.errors.required)">
+                                        Date of next ARV Refill is required
+                                    </mat-error>
+                                    <mat-error
+                                            *ngIf="visit2.errors && (visit2.dirty || visit2.touched) && (visit2.errors.min)">
+                                        Date of next ARV Refill cannot be
+                                        before {{minNextAppointment | date: 'dd MMM, yyyy'}}
+                                    </mat-error>
+                                    <mat-error
+                                            *ngIf="visit2.errors && (visit2.dirty || visit2.touched) && (visit2.errors.max)">
+                                        Date of next ARV Refill cannot be after {{maxNextVisit | date: 'dd NNN, yyyy'}}
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div class="col-md-6">
+                                <mat-form-field class="full-width">
+                                    <input matInput [matDatepicker]="picker3"
+                                           placeholder="Date of next Clinic/Lab"
+                                           [(ngModel)]="entity.dateNextClinic"
+                                           #visit3="ngModel"
+                                           [min]="minNextAppointment"
+                                           [max]="maxNextVisit"
+                                           name="visit3">
+                                    <mat-datepicker-toggle
+                                            matSuffix
+                                            [for]="picker3">
+                                    </mat-datepicker-toggle>
+                                    <mat-datepicker #picker3></mat-datepicker>
+                                    <mat-error
+                                            *ngIf="visit3.errors && (visit3.dirty || visit3.touched) && (visit3.errors.required)">
+                                        Date of next Clinic/Lab is required
+                                    </mat-error>
+                                    <mat-error
+                                            *ngIf="visit3.errors && (visit3.dirty || visit3.touched) && (visit3.errors.min)">
+                                        Date of next Clinic/Lab cannot be
+                                        before {{minNextAppointment | date: 'dd MMM, yyyy'}}
+                                    </mat-error>
+                                    <mat-error
+                                            *ngIf="visit3.errors && (visit3.dirty || visit3.touched) && (visit3.errors.max)">
+                                        Date of next Clinic/Lab cannot be after {{maxNextVisit | date: 'dd NNN, yyyy'}}
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                        </div>
+                    </ng-container>
+                    <ng-container *ngIf="enableCommunityPharmacy">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <mat-form-field class="full-width">
+                                    <mat-label>State of Residence</mat-label>
+                                    <mat-select name="state"
+                                                [(ngModel)]="state"
+                                                (selectionChange)="stateChanged($event.value.id)">
+                                        <mat-option></mat-option>
+                                        <mat-option *ngFor="let state of states"
+                                                    [value]="state">{{state.name}}</mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                            </div>
+                            <div class="col-md-6">
+                                <mat-form-field class="full-width">
+                                    <mat-label>LGA of Residence</mat-label>
+                                    <mat-select name="lga" [(ngModel)]="lga"
+                                                (selectionChange)="lgaChanged($event.value.id)">
+                                        <mat-option></mat-option>
+                                        <mat-option *ngFor="let lga of lgas" [value]="lga">{{lga.name}}</mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <mat-form-field class="full-width">
+                                    <mat-label>Community Pharmacy</mat-label>
+                                    <mat-select name="pharm" [(ngModel)]="entity.communityPharmacy" required
+                                                #pharm="ngModel"
+                                                (selectionChange)="communityPharmacyChanged($event.value)"
+                                                [compareWith]="entityCompare">
+                                        <mat-option></mat-option>
+                                        <mat-option *ngFor="let pharmacy of communityPharmacies"
+                                                    [value]="pharmacy">{{pharmacy.name}}</mat-option>
+                                    </mat-select>
+                                    <mat-error
+                                            *ngIf="pharm.errors && (pharm.dirty || pharm.touched) && (pharm.errors.required)">
+                                        Community Pharmacy is required
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div class="col-md-6">
+                                <adf-card-view [properties]="properties" [editable]="false"></adf-card-view>
+                            </div>
+                        </div>
+                    </ng-container>
+                    <ng-container *ngIf="entity.dateDiscontinued">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <mat-form-field class="full-width">
+                                    <mat-label>Date Discontinued</mat-label>
+                                    <input matInput [matDatepicker]="picker5"
+                                           [(ngModel)]="entity.dateDiscontinued"
+                                           #disc="ngModel"
+                                           (dateChange)="dateDiscontinuedChanged()"
+                                           [min]="minDiscontinued"
+                                           [max]="today"
+                                           name="disc"
+                                           required>
+                                    <mat-datepicker-toggle
+                                            matSuffix
+                                            [for]="picker5">
+                                    </mat-datepicker-toggle>
+                                    <mat-datepicker #picker5></mat-datepicker>
+                                    <mat-error
+                                            *ngIf="disc.errors && (disc.dirty || disc.touched) && (disc.errors.required)">
+                                        Date Discontinued is required
+                                    </mat-error>
+                                    <mat-error
+                                            *ngIf="disc.errors && (disc.dirty || disc.touched) && (disc.errors.min)">
+                                        Date Discontinued cannot be before {{minDiscontinued | date: 'dd MMM, yyyy'}}
+                                    </mat-error>
+                                    <mat-error
+                                            *ngIf="disc.errors && (disc.dirty || disc.touched) && (disc.errors.max)">
+                                        Date Discontinued cannot be after {{today | date: 'dd MMM, yyyy'}}
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div class="col-md-6">
+                                <mat-form-field class="full-width">
+                                    <mat-label>Reason Discontinued</mat-label>
+                                    <mat-select name="reason" #reason="ngModel" [(ngModel)]="entity.reasonDiscontinued"
+                                                required>
+                                        <mat-option></mat-option>
+                                        <mat-option [value]="'Becomes pregnant'">Becomes pregnant</mat-option>
+                                        <mat-option [value]="'Unable to pay service charge'">Unable to pay service
+                                            charge
+                                        </mat-option>
+                                        <mat-option [value]="'Develops comorbidity'">Develops comorbidity</mat-option>
+                                        <mat-option [value]="'Loss of viral suppression'">Loss of viral suppression
+                                        </mat-option>
+                                        <mat-option [value]="'Decides to go back to hospital'">Decides to go back to
+                                            hospital
+                                        </mat-option>
+                                        <mat-option [value]="'Becomes non-adherent'">Becomes non-adherent</mat-option>
+                                    </mat-select>
+                                    <mat-error
+                                            *ngIf="reason.errors && (reason.dirty || reason.touched) && (reason.errors.required)">
+                                        Reason for Discontinuation is required
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <mat-form-field class="full-width" *ngIf="minDate">
+                                    <input matInput [matDatepicker]="picker6"
+                                           placeholder="Date Returned to Facility"
+                                           [(ngModel)]="entity.dateReturnedToFacility"
+                                           #visit1="ngModel"
+                                           [min]="minDate"
+                                           [max]="today"
+                                           name="visit1"
+                                           required>
+                                    <mat-datepicker-toggle
+                                            matSuffix
+                                            [for]="picker6">
+                                    </mat-datepicker-toggle>
+                                    <mat-datepicker #picker6></mat-datepicker>
+                                    <mat-error
+                                            *ngIf="visit1.errors && (visit1.dirty || visit1.touched) && (visit1.errors.required)">
+                                        Date returned to Facility is required
+                                    </mat-error>
+                                    <mat-error
+                                            *ngIf="visit1.errors && (visit1.dirty || visit1.touched) && (visit1.errors.min)">
+                                        Date returned to Facility cannot be before {{minDate | date: 'dd MMM, yyyy'}}
+                                    </mat-error>
+                                    <mat-error
+                                            *ngIf="visit1.errors && (visit1.dirty || visit1.touched) && (visit1.errors.max)">
+                                        Date returned to Facility cannot be after {{today | date: 'dd MMM, yyyy'}}
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                        </div>
+                    </ng-container>
+                    <mat-divider></mat-divider>
+                </mat-card-content>
+                <mat-card-actions class="lamis-edit-form-actions">
+                    <button mat-raised-button type="button" (click)="previousState()">Back</button>
+                    <button mat-raised-button color='primary'
+                            [disabled]="devolveForm.invalid || isSaving"
+                            type="submit">
+                        {{entity.id !== undefined ? 'Update' : 'Save'}}
+                    </button>
+                </mat-card-actions>
+            </mat-card>
+        </form>
+    </div>
+</div>

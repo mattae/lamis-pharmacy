@@ -1,0 +1,332 @@
+<div class="lamis-edit-form">
+    <div class="lamis-edit-form-container">
+        <form name="form" role="form" novalidate (ngSubmit)="save()" #pharmacyForm="ngForm">
+            <mat-card class="default">
+                <mat-card-header>
+                </mat-card-header>
+                <mat-card-content *ngIf="patient">
+                    <div>
+                        <mat-form-field class="full-width" *ngIf="entity && dateRegistration">
+                            <input matInput [matDatepicker]="picker"
+                                   placeholder="Date of Dispensing"
+                                   [(ngModel)]="entity.dateVisit"
+                                   [matDatepickerFilter]="filterDates.bind(this)"
+                                   (dateChange)="dateVisitChanged($event.value)"
+                                   #visit="ngModel"
+                                   [max]="today"
+                                   [min]="dateRegistration"
+                                   name="visit"
+                                   required>
+                            <mat-datepicker-toggle
+                                    matSuffix
+                                    [for]="picker">
+                            </mat-datepicker-toggle>
+                            <mat-datepicker #picker></mat-datepicker>
+                            <mat-error
+                                    *ngIf="visit.errors && (visit.dirty || visit.touched) && (visit.errors.required)">
+                                Date of dispensing is required
+                            </mat-error>
+                            <mat-error
+                                    *ngIf="visit.errors && (visit.dirty || visit.touched) && (visit.errors.min)">
+                                Date of dispensing cannot be before {{dateRegistration | date: 'dd MMM, yyyy'}}
+                            </mat-error>
+                            <mat-error
+                                    *ngIf="visit.errors && (visit.dirty || visit.touched) && (visit.errors.max)">
+                                Date of dispensing cannot be in the future
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div class="row" *ngIf="devolve && !devolve.dateReturnedToFacility">
+                        <div class="col-md-6">
+                            <mat-form-field class="full-width">
+                                <mat-label>Date of Devolvement</mat-label>
+                                <input matInput disabled value="{{devolve.dateDevolved | date: 'dd MMM, yyyy'}}">
+                            </mat-form-field>
+                        </div>
+                        <div class="col-md-6">
+                            <mat-form-field class="full-width">
+                                <mat-label>DMOC Type</mat-label>
+                                <input matInput disabled [value]="dmocType">
+                            </mat-form-field>
+                        </div>
+                    </div>
+                    <div>
+                        <mat-form-field class="full-width">
+                            <mat-select [(ngModel)]="entity.duration"
+                                        placeholder="Refill Period (days)"
+                                        (selectionChange)="durationChanged($event.value)"
+                                        #refill="ngModel" required name="refill">
+                                <mat-option></mat-option>
+                                <mat-option [value]="15">15</mat-option>
+                                <mat-option [value]="30">30</mat-option>
+                                <mat-option [value]="60">60</mat-option>
+                                <mat-option [value]="90">90</mat-option>
+                                <mat-option [value]="120">120</mat-option>
+                                <mat-option [value]="150">150</mat-option>
+                                <mat-option [value]="180">180</mat-option>
+                            </mat-select>
+                            <mat-error
+                                    *ngIf="refill.errors && (refill.dirty || refill.touched) && (refill.errors.required)">
+                                Refill Duration is required
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div *ngIf="minNextAppointment">
+                        <mat-form-field class="full-width">
+                            <input matInput [matDatepicker]="picker1"
+                                   placeholder="Date of Next Appointment"
+                                   [(ngModel)]="entity.nextAppointment"
+                                   #next="ngModel"
+                                   [min]="minNextAppointment"
+                                   [max]="maxNextVisit"
+                                   name="next"
+                                   required>
+                            <mat-datepicker-toggle
+                                    matSuffix
+                                    [for]="picker1">
+                            </mat-datepicker-toggle>
+                            <mat-datepicker #picker1></mat-datepicker>
+                            <mat-error
+                                    *ngIf="next.errors && (next.dirty || next.touched) && (next.errors.required)">
+                                Date of Next Appointment is required
+                            </mat-error>
+                            <mat-error
+                                    *ngIf="next.errors && (next.dirty || next.touched) && (next.errors.max)">
+                                Date of Next Appointment must be after {{maxNextVisit | date:'dd MMM, yyyy'}}
+                            </mat-error>
+                            <mat-error
+                                    *ngIf="next.errors && (next.dirty || next.touched) && (next.errors.min)">
+                                Date of Next Appointment must be after {{minNextAppointment | date:'dd MMM, yyyy'}}
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div>
+                        <mat-form-field class="full-width" *ngIf="entity.mmdType">
+                            <mat-label>MMD Type</mat-label>
+                            <input matInput disabled [value]="entity.mmdType || ''">
+                        </mat-form-field>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <mat-checkbox [(ngModel)]="entity.prescriptionError" name="error">Any prescription error?
+                            </mat-checkbox>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <mat-checkbox [(ngModel)]="entity.adrScreened" name="screened">Adverse Drug Reactions
+                            </mat-checkbox>
+                        </div>
+                        <div class="col-md-6">
+                            <mat-form-field *ngIf="entity.adrScreened">
+                                <mat-select multiple [(ngModel)]="entity.adrs"
+                                            name="adrs"
+                                >
+                                    <mat-option></mat-option>
+                                </mat-select>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <mat-form-field>
+                                <mat-select placeholder="Regimen Type"
+                                            (selectionChange)="regimenTypeChange($event.value)">
+                                    <mat-option></mat-option>
+                                    <mat-option *ngFor="let type of regimenTypes"
+                                                [value]="type">{{type.description}}</mat-option>
+                                </mat-select>
+                            </mat-form-field>
+                        </div>
+                        <div class="col-md-6">
+                            <mat-form-field>
+                                <mat-select placeholder="Regimen"
+                                            multiple
+                                            name="regimen"
+                                            [(ngModel)]="selectedRegimens"
+                                            [compareWith]="entityCompare"
+                                            (selectionChange)="regimenChange($event.value)">
+                                    <mat-option *ngFor="let regimen of regimens"
+                                                [value]="regimen">{{regimen.description}}</mat-option>
+                                </mat-select>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                    <div>
+                        Drug Dispensed
+                        <mat-divider></mat-divider>
+                        <ngx-datatable
+                            #mydatatable
+                            class="material"
+                            [headerHeight]="50"
+                            [limit]="8"
+                            [columnMode]="ColumnMode.force"
+                            [footerHeight]="50"
+                            rowHeight="auto"
+                            [rows]="rows"
+                        >
+                            <ngx-datatable-column name="Description">
+                                <ng-template ngx-datatable-cell-template let-value="value">
+                                    <mat-form-field>
+                                        <input matInput disabled [value]="value" style="font-weight: 900">
+                                    </mat-form-field>
+                                </ng-template>
+                            </ngx-datatable-column>
+                            <ngx-datatable-column [maxWidth]="1">
+                                <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value"
+                                             let-row="row">
+                                </ng-template>
+                            </ngx-datatable-column>
+                            <ngx-datatable-column name="Morning">
+                                <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value"
+                                             let-row="row">
+                                    <mat-form-field class="full-width">
+                                        <input
+                                                autofocus
+                                                matInput
+                                                type="number"
+                                                (blur)="updateValue($event, 'morning', rowIndex)"
+                                                [value]="value"
+                                        >
+                                    </mat-form-field>
+                                </ng-template>
+                            </ngx-datatable-column>
+                            <ngx-datatable-column [maxWidth]="1">
+                                <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value"
+                                             let-row="row">
+                                </ng-template>
+                            </ngx-datatable-column>
+                            <ngx-datatable-column name="Afternoon">
+                                <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value"
+                                             let-row="row">
+                                    <mat-form-field class="full-width">
+                                        <input
+                                                autofocus
+                                                matInput
+                                                type="number"
+                                                (blur)="updateValue($event, 'afternoon', rowIndex)"
+                                                [value]="value"
+                                        >
+                                    </mat-form-field>
+                                </ng-template>
+                            </ngx-datatable-column>
+                            <ngx-datatable-column [maxWidth]="1">
+                                <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value"
+                                             let-row="row">
+                                </ng-template>
+                            </ngx-datatable-column>
+                            <ngx-datatable-column name="Evening">
+                                <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value"
+                                             let-row="row">
+                                    <mat-form-field class="full-width">
+                                        <input
+                                                autofocus
+                                                matInput
+                                                type="number"
+                                                (blur)="updateValue($event, 'evening', rowIndex)"
+                                                [value]="value"
+                                        >
+                                    </mat-form-field>
+                                </ng-template>
+                            </ngx-datatable-column>
+                            <ngx-datatable-column [maxWidth]="1">
+                                <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value"
+                                             let-row="row">
+                                </ng-template>
+                            </ngx-datatable-column>
+                            <ngx-datatable-column name="Duration">
+                                <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value"
+                                             let-row="row">
+                                    <mat-form-field class="full-width">
+                                        <input
+                                                autofocus
+                                                matInput
+                                                type="number"
+                                                (blur)="updateValue($event, 'duration', rowIndex)"
+                                                [value]="value"
+                                        >
+                                    </mat-form-field>
+                                </ng-template>
+                            </ngx-datatable-column>
+                            <ngx-datatable-column [maxWidth]="1">
+                                <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value"
+                                             let-row="row">
+                                </ng-template>
+                            </ngx-datatable-column>
+                            <ngx-datatable-column name="Quantity">
+                                <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value"
+                                             let-row="row">
+                                    <mat-form-field>
+                                        <input matInput disabled [value]="value" style="font-weight: 900">
+                                    </mat-form-field>
+                                </ng-template>
+                            </ngx-datatable-column>
+                        </ngx-datatable>
+                    </div>
+                    <mat-divider></mat-divider>
+                </mat-card-content>
+                <ng-container *ngIf="iptSelected">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <mat-form-field>
+                                <mat-label>IPT Type</mat-label>
+                                <mat-select required [(ngModel)]="ipt.type" name="inh" #inh="ngModel">
+                                    <mat-option></mat-option>
+                                    <mat-option [value]="'START_INITIATION'">Start Initiation</mat-option>
+                                    <mat-option [value]="'START_REFILL'">Start Refill</mat-option>
+                                    <mat-option [value]="'FOLLOWUP_INITIATION'">Followup Initiation</mat-option>
+                                    <mat-option [value]="'FOLLOWUP_REFILL'">Followup Refill</mat-option>
+                                </mat-select>
+                                <mat-error
+                                        *ngIf="inh.errors && (inh.dirty || inh.touched) && (inh.errors.required)">
+                                    IPT Type is required
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <mat-checkbox [(ngModel)]="ipt.completed"
+                                          name="uibn"
+                            >
+                                IPT completed?
+                            </mat-checkbox>
+                        </div>
+                        <div class="col-md-6">
+                            <mat-form-field class="full-width" *ngIf="entity.dateVisit && ipt.completed">
+                                <input matInput [matDatepicker]="picker2"
+                                       placeholder="Date of Completion"
+                                       [(ngModel)]="ipt.dateCompleted"
+                                       #com="ngModel"
+                                       [min]="entity.dateVisit"
+                                       name="com"
+                                       required>
+                                <mat-datepicker-toggle
+                                        matSuffix
+                                        [for]="picker2">
+                                </mat-datepicker-toggle>
+                                <mat-datepicker #picker2></mat-datepicker>
+                                <mat-error
+                                        *ngIf="com.errors && (com.dirty || com.touched) && (com.errors.required)">
+                                    Date completed is required
+                                </mat-error>
+                                <mat-error
+                                        *ngIf="com.errors && (com.dirty || com.touched) && (com.errors.min)">
+                                    Date must not be before {{entity.dateVisit | date:'dd MMM, yyyy'}}
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                </ng-container>
+                <mat-card-actions class="lamis-edit-form-actions">
+                    <button mat-raised-button type="button" (click)="previousState()">Back</button>
+                    <button mat-raised-button color='primary'
+                            [disabled]="pharmacyForm.invalid || rows.length === 0 || isSaving"
+                            type="submit">
+                        {{entity.id !== undefined ? 'Update' : 'Save'}}
+                    </button>
+                </mat-card-actions>
+            </mat-card>
+        </form>
+    </div>
+</div>

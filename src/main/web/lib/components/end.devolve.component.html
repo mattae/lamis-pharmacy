@@ -1,0 +1,120 @@
+<div class="lamis-edit-form">
+    <div class="lamis-edit-form-container">
+        <form name="form" role="form" novalidate (ngSubmit)="save()" #devolveForm="ngForm">
+            <mat-card class="default">
+                <mat-card-header>
+                </mat-card-header>
+                <mat-card-content *ngIf="entity">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <mat-form-field class="full-width">
+                                <mat-label>Date of Devolvement</mat-label>
+                                <input matInput disabled value="{{entity.dateDevolved | date: 'dd MMM, yyyy'}}">
+                            </mat-form-field>
+                        </div>
+                        <div class="col-md-6">
+                            <mat-form-field class="full-width">
+                                <mat-label>DMOC Type</mat-label>
+                                <input matInput disabled [value]="dmocType">
+                            </mat-form-field>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <mat-form-field class="full-width">
+                                <mat-label>Date Discontinued</mat-label>
+                                <input matInput [matDatepicker]="picker1"
+                                       [(ngModel)]="entity.dateDiscontinued"
+                                       #disc="ngModel"
+                                       (dateChange)="dateDiscontinuedChanged()"
+                                       [min]="minDiscontinued"
+                                       [max]="today"
+                                       name="disc"
+                                       required>
+                                <mat-datepicker-toggle
+                                        matSuffix
+                                        [for]="picker1">
+                                </mat-datepicker-toggle>
+                                <mat-datepicker #picker1></mat-datepicker>
+                                <mat-error
+                                        *ngIf="disc.errors && (disc.dirty || disc.touched) && (disc.errors.required)">
+                                    Date Discontinued is required
+                                </mat-error>
+                                <mat-error
+                                        *ngIf="disc.errors && (disc.dirty || disc.touched) && (disc.errors.min)">
+                                    Date Discontinued cannot be before {{minDiscontinued | date: 'dd MMM, yyyy'}}
+                                </mat-error>
+                                <mat-error
+                                        *ngIf="disc.errors && (disc.dirty || disc.touched) && (disc.errors.max)">
+                                    Date Discontinued cannot be after {{today | date: 'dd MMM, yyyy'}}
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div class="col-md-6">
+                            <mat-form-field class="full-width">
+                                <mat-label>Reason Discontinued</mat-label>
+                                <mat-select name="reason" #reason="ngModel" [(ngModel)]="entity.reasonDiscontinued"
+                                            required>
+                                    <mat-option></mat-option>
+                                    <mat-option [value]="'Becomes pregnant'">Becomes pregnant</mat-option>
+                                    <mat-option [value]="'Unable to pay service charge'">Unable to pay service charge
+                                    </mat-option>
+                                    <mat-option [value]="'Develops comorbidity'">Develops comorbidity</mat-option>
+                                    <mat-option [value]="'Loss of viral suppression'">Loss of viral suppression
+                                    </mat-option>
+                                    <mat-option [value]="'Decides to go back to hospital'">Decides to go back to
+                                        hospital
+                                    </mat-option>
+                                    <mat-option [value]="'Becomes non-adherent'">Becomes non-adherent</mat-option>
+                                </mat-select>
+                                <mat-error
+                                        *ngIf="reason.errors && (reason.dirty || reason.touched) && (reason.errors.required)">
+                                    Reason for Discontinuation is required
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <mat-form-field class="full-width" *ngIf="minDate">
+                                <input matInput [matDatepicker]="picker"
+                                       placeholder="Date Returned to Facility"
+                                       [(ngModel)]="entity.dateReturnedToFacility"
+                                       #visit="ngModel"
+                                       [min]="minDate"
+                                       [max]="today"
+                                       name="visit"
+                                       required>
+                                <mat-datepicker-toggle
+                                        matSuffix
+                                        [for]="picker">
+                                </mat-datepicker-toggle>
+                                <mat-datepicker #picker></mat-datepicker>
+                                <mat-error
+                                        *ngIf="visit.errors && (visit.dirty || visit.touched) && (visit.errors.required)">
+                                    Date returned to Facility is required
+                                </mat-error>
+                                <mat-error
+                                        *ngIf="visit.errors && (visit.dirty || visit.touched) && (visit.errors.min)">
+                                    Date returned to Facility cannot be before {{minDate | date: 'dd MMM, yyyy'}}
+                                </mat-error>
+                                <mat-error
+                                        *ngIf="visit.errors && (visit.dirty || visit.touched) && (visit.errors.max)">
+                                    Date returned to Facility cannot be after {{today | date: 'dd MMM, yyyy'}}
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                </mat-card-content>
+                <mat-card-actions class="lamis-edit-form-actions">
+                    <button mat-raised-button type="button" (click)="previousState()">Back</button>
+                    <button mat-raised-button color='primary'
+                            [disabled]="devolveForm.invalid || isSaving || !entity.dateDiscontinued"
+                            type="submit">
+                        Update
+                    </button>
+                </mat-card-actions>
+            </mat-card>
+        </form>
+    </div>
+</div>

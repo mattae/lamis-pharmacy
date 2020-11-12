@@ -1,0 +1,76 @@
+<div class="lamis-edit-form">
+    <div class="lamis-edit-form-container">
+        <mat-card>
+            <mat-card-header>
+            </mat-card-header>
+            <mat-card-content>
+                <adf-card-view [properties]="properties" editable="false"></adf-card-view>
+                <mat-divider></mat-divider>
+                <ngx-datatable
+                    #mydatatable
+                    *ngIf="dataSource"
+                    class="material"
+                    [headerHeight]="50"
+                    [limit]="8"
+                    [columnMode]="ColumnMode.force"
+                    [footerHeight]="50"
+                    rowHeight="auto"
+                    [rows]="dataSource"
+                >
+                    <ngx-datatable-column name="Description" [prop]="'description'">
+                        <ng-template ngx-datatable-cell-template let-value="value">
+                            <mat-form-field>
+                                <input matInput disabled [value]="value" style="font-weight: 900">
+                            </mat-form-field>
+                        </ng-template>
+                    </ngx-datatable-column>
+                    <ngx-datatable-column name="Morning" [prop]="'morning'">
+                        <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value"
+                                     let-row="row">
+                            <mat-form-field>
+                                <input matInput disabled [value]="value" style="font-weight: 900">
+                            </mat-form-field>
+                        </ng-template>
+                    </ngx-datatable-column>
+                    <ngx-datatable-column name="Afternoon" [prop]="'afternoon'">
+                        <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value"
+                                     let-row="row">
+                            <mat-form-field>
+                                <input matInput disabled [value]="value" style="font-weight: 900">
+                            </mat-form-field>
+                        </ng-template>
+                    </ngx-datatable-column>
+                    <ngx-datatable-column name="Evening" [prop]="'evening'">
+                        <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value"
+                                     let-row="row">
+                            <mat-form-field>
+                                <input matInput disabled [value]="value" style="font-weight: 900">
+                            </mat-form-field>
+                        </ng-template>
+                    </ngx-datatable-column>
+                    <ngx-datatable-column name="Duration" [prop]="'duration'">
+                        <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value"
+                                     let-row="row">
+                            <mat-form-field>
+                                <input matInput disabled [value]="value" style="font-weight: 900">
+                            </mat-form-field>
+                        </ng-template>
+                    </ngx-datatable-column>
+                    <ngx-datatable-column name="Quantity" [prop]="'quantity'">
+                        <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value"
+                                     let-row="row">
+                            <mat-form-field>
+                                <input matInput disabled [value]="value" style="font-weight: 900">
+                            </mat-form-field>
+                        </ng-template>
+                    </ngx-datatable-column>
+                </ngx-datatable>
+            </mat-card-content>
+            <mat-card-actions class="lamis-edit-form-actions">
+                <button mat-button (click)="previousState()">Back</button>
+                <button mat-raised-button color="warn" (click)="delete()">Delete</button>
+                <button mat-raised-button color="primary" (click)="edit()">Edit</button>
+            </mat-card-actions>
+        </mat-card>
+    </div>
+</div>
