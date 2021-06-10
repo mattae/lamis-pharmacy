@@ -1,14 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <databaseChangeLog
-        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
 
     <property name="autoIncrement" value="true"/>
 
     <changeSet id="20200723134611-04" author="mattae">
         <sql>
             update devolve set dmoc_type = 'MMD' where dmoc_type = 'null' or dmoc_type is null;
+        </sql>
+    </changeSet>
+
+    <changeSet id="20210105134611-01" author="mattae">
+        <sql>
+            delete from status_history where status is null
+        </sql>
+    </changeSet>
+
+    <changeSet id="20210605074611-01" author="mattae">
+        <sql>
+            update status_history set status = 'ART_RESTART' where status = '' or status is null and date_status >
+            '2021-05-01'
         </sql>
     </changeSet>
 </databaseChangeLog>

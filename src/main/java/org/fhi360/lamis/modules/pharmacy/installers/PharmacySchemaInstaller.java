@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
 
 @Order(1)
-@Installer(name = "pharmacy-schema-installer-4", description = "Installs the required database tables", version = 7)
+@Installer(name = "pharmacy-schema-installer-4", description = "Installs the required database tables", version = 11)
 @Slf4j
 public class PharmacySchemaInstaller extends AcrossLiquibaseInstaller {
     public PharmacySchemaInstaller() {

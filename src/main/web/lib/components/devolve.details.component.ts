@@ -82,6 +82,12 @@ export class DevolveDetailsComponent implements OnInit {
             case 'S_CARG':
                 type = 's-CARG';
                 break;
+            case 'DARF':
+                type = 'DARF';
+                break;
+            case 'HOME_DELIVERY':
+                type = 'Home Refill';
+                break;
             case 'MMS':
                 type = 'MMS';
                 break;
@@ -164,11 +170,18 @@ export class DevolveDetailsComponent implements OnInit {
             label: 'Date of Viral Load',
             format: 'dd MMM, yyyy'
         }));
-        if (this.entity.communityPharmacy) {
+        if (this.entity.extra.refillClub) {
+            this.properties.push(new CardViewTextItemModel({
+                key: 'rc',
+                value: this.entity.extra.refillClub,
+                label: 'Refill Club'
+            }));
+        }
+        if (this.entity.dddOutlet) {
             this.properties.push(new CardViewTextItemModel({
                 key: 'ds',
-                value: this.entity.communityPharmacy.name,
-                label: 'Community Pharmacy'
+                value: this.entity.dddOutlet.name,
+                label: 'DDD Outlet'
             }));
         }
         if (this.entity.dateDiscontinued) {

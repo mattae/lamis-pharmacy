@@ -60,8 +60,8 @@ public class PharmacyResource {
 
         Pharmacy result = pharmacyService.savePharmacy(pharmacy);
         return ResponseEntity.created(new URI("/api/pharmacy/" + result.getId()))
-                .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
-                .body(result);
+            .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
+            .body(result);
     }
 
     /**
@@ -82,8 +82,8 @@ public class PharmacyResource {
 
         Pharmacy result = pharmacyService.updatePharmacy(pharmacy);
         return ResponseEntity.ok()
-                .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, pharmacy.getId().toString()))
-                .body(result);
+            .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, pharmacy.getId().toString()))
+            .body(result);
     }
 
     /**
@@ -172,9 +172,9 @@ public class PharmacyResource {
     public List<DrugDTO> getDrugs(@PathVariable Long regimenId) {
         Optional<Regimen> regimen = regimenRepository.findById(regimenId);
         return regimen.map(value -> regimenDrugRepository.findByRegimen(value)
-                .stream()
-                .map(DrugDTO::new)
-                .collect(toList())).orElseGet(ArrayList::new);
+            .stream()
+            .map(DrugDTO::new)
+            .collect(toList())).orElseGet(ArrayList::new);
     }
 
     @GetMapping("/pharmacies/regimens/regimen-type/{regimenTypeId}")
@@ -196,8 +196,8 @@ public class PharmacyResource {
         List<LocalDate> visitDates = new ArrayList<>();
         patientRepository.findById(id).ifPresent(patient -> {
             List<LocalDate> dates = pharmacyRepository.findVisitsByPatient(patient).stream()
-                    .map(VisitDates::getDateVisit)
-                    .collect(toList());
+                .map(VisitDates::getDateVisit)
+                .collect(toList());
             visitDates.addAll(dates);
         });
         return visitDates;
@@ -207,7 +207,7 @@ public class PharmacyResource {
     public ResponseEntity<Devolve> getCurrentDevolvementByPatient(@PathVariable Long id, @PathVariable LocalDate date) {
         Optional<Devolve> devolve = patientRepository.findById(id).flatMap(patient -> {
             List<Devolve> devolves = devolveRepository.findByPatientAndDateDevolvedBefore(patient, date.plusDays(1),
-                    PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, "dateDevolved")));
+                PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, "dateDevolved")));
             return !devolves.isEmpty() ? Optional.of(devolves.get(0)) : Optional.empty();
         });
 
@@ -217,9 +217,10 @@ public class PharmacyResource {
     @GetMapping("/pharmacies/patient/{id}/has-dead-status")
     public ResponseEntity<StatusHistory> hasDeadStatus(@PathVariable String id) {
         List<StatusHistory> histories = patientRepository.findByUuid(id).flatMap(patient ->
-                Optional.of(statusHistoryRepository.findByPatient(patient).stream()
-                        .filter(statusHistory -> statusHistory.getStatus().equals(ClientStatus.KNOWN_DEATH)).collect(toList())))
-                .orElse(null);
+            Optional.of(statusHistoryRepository.findByPatient(patient).stream()
+                .filter(statusHistory -> statusHistory.getStatus() != null &&
+                    statusHistory.getStatus().equals(ClientStatus.KNOWN_DEATH)).collect(toList())))
+            .orElse(null);
         if (histories != null && !histories.isEmpty()) {
             return ResponseEntity.of(histories.stream().min((h1, h2) -> h2.getDateStatus().compareTo(h1.getDateStatus())));
         }
@@ -227,8 +228,18 @@ public class PharmacyResource {
         return ResponseEntity.of(Optional.empty());
     }
 
-    @GetMapping("/pharmacies/test")
-    public Long test() {
-        return pharmacyService.count();
+    @GetMapping("/pharmacies/patient/{patientId}/last-ipt-at/{date}")
+    public LocalDate dateOfLastIptBefore(@PathVariable Long patientId, @PathVariable LocalDate date) {
+        return pharmacyService.dateOfLastIptBefore(patientId, date);
+    }
+
+    @GetMapping("/pharmacies/patient/{patientId}/uncompleted-ipt-after/{date}")
+    public Boolean hasUncompletedIptAfter(@PathVariable Long patientId, @PathVariable LocalDate date) {
+        return pharmacyService.hasUncompletedIptAfter(patientId, date);
+    }
+
+    @GetMapping("/pharmacies/patient/{patientId}/complete-tpt/{date}")
+    public void completeTpt(@PathVariable Long patientId, @PathVariable LocalDate date) {
+        pharmacyService.completeTpt(patientId, date);
     }
 }

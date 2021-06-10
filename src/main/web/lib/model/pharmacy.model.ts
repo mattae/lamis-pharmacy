@@ -94,13 +94,14 @@ export interface RegimenInfo {
     regimen?: string;
 }
 
-export interface CommunityPharmacy {
+export interface DDDOutlet {
     id?: number;
     name?: string;
     address?: string;
     phone?: string;
     email?: string;
     lga?: any;
+    type?: string;
 }
 
 export interface RelatedClinic {
@@ -132,7 +133,7 @@ export interface Devolve {
     uuid?: string;
     patient?: Patient;
     facility?: Facility;
-    communityPharmacy?: CommunityPharmacy;
+    dddOutlet?: DDDOutlet;
     dateDevolved?: Moment;
     dateDiscontinued?: Moment;
     dateReturnedToFacility?: Moment;
@@ -145,6 +146,7 @@ export interface Devolve {
     relatedClinic?: RelatedClinic;
     relatedPharmacy?: RelatedViralLoad;
     relatedViralLoad?: RelatedViralLoad;
+    extra?: any;
 }
 
 export interface StatusHistory {

@@ -16,6 +16,7 @@ import org.lamisplus.modules.lamis.legacy.domain.repositories.*;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -34,12 +35,11 @@ public class DevolveResource {
     private final PatientRepository patientRepository;
     private final LaboratoryRepository laboratoryRepository;
     private final RegimenRepository regimenRepository;
-    //private final LaboratoryLineRepository laboratoryLineRepository;
     private final PharmacyRepository pharmacyRepository;
-    //private final PharmacyLineRepository pharmacyLineRepository;
     private final ClinicRepository clinicRepository;
     private final ProvinceRepository provinceRepository;
-    private final CommunityPharmacyRepository communityPharmacyRepository;
+    private final DDDOutletRepository dddOutletRepository;
+    private final JdbcTemplate jdbcTemplate;
 
     /**
      * POST  /devolves : Create a new devolve.
@@ -137,12 +137,12 @@ public class DevolveResource {
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id)).build();
     }
 
-    @GetMapping("/devolves/community-pharmacies/lga/{id}")
-    public List<CommunityPharmacy> getCommunityPharmaciesByLga(@PathVariable Long id) {
-        return provinceRepository.findById(id).map(communityPharmacyRepository::findByLga).orElse(new ArrayList<>())
-                .stream()
-                .filter(CommunityPharmacy::getActive)
-                .collect(Collectors.toList());
+    @GetMapping("/devolves/ddd-outlets/type/{type}/lga/{id}")
+    public List<DDDOutlet> getDDDOutletByTypeAndLga(@PathVariable String type, @PathVariable Long id) {
+        return provinceRepository.findById(id).map(l -> dddOutletRepository.findByLgaAndType(l, type)).orElse(new ArrayList<>())
+            .stream()
+            .filter(DDDOutlet::getActive)
+            .collect(Collectors.toList());
     }
 
     @GetMapping("/devolves/{devolveId}/patient/{id}/related-pharmacy/at/{date}")
@@ -304,5 +304,10 @@ public class DevolveResource {
             return Optional.empty();
         }));
         return ResponseUtil.wrapOrNotFound(related);
+    }
+
+    @GetMapping("/devolves/refill-clubs")
+    public List<String> getRefillClubs() {
+        return jdbcTemplate.queryForList("select distinct extra->>'refillClub' from devolve order by 1", String.class);
     }
 }

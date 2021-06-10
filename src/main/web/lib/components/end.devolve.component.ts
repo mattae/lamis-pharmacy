@@ -7,8 +7,8 @@ import {ActivatedRoute} from '@angular/router';
 import {Devolve} from '../model/pharmacy.model';
 import {Observable} from 'rxjs';
 import {HttpErrorResponse, HttpResponse} from '@angular/common/http';
-import {Moment} from 'moment';
 import * as moment_ from 'moment';
+import {Moment} from 'moment';
 
 const moment = moment_;
 
@@ -18,7 +18,7 @@ const moment = moment_;
 })
 export class EndDevolveComponent implements OnInit {
     entity: Devolve = {};
-    dmocType: string = '';
+    dmocType = '';
     isSaving = false;
     minDate: Moment;
     minDiscontinued: Moment;
@@ -62,6 +62,9 @@ export class EndDevolveComponent implements OnInit {
                         break;
                     case 'S_CARG':
                         type = 'S-CARG';
+                        break;
+                    case 'HOME_REFILL':
+                        type = 'Home Refill';
                         break;
                     case 'MMS':
                         type = 'MMS';

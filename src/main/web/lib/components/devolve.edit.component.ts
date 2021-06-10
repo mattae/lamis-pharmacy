@@ -1,13 +1,5 @@
 import {Component, OnInit} from '@angular/core';
-import {
-    CommunityPharmacy,
-    Devolve,
-    Patient,
-    RelatedCD4,
-    RelatedClinic,
-    RelatedPharmacy,
-    RelatedViralLoad
-} from '../model/pharmacy.model';
+import {DDDOutlet, Devolve, Patient, RelatedCD4, RelatedClinic, RelatedPharmacy, RelatedViralLoad} from '../model/pharmacy.model';
 import * as moment_ from 'moment';
 import {Moment} from 'moment';
 import {PharmacyService} from '../services/pharmacy.service';
@@ -35,7 +27,7 @@ export class DevolveEditComponent implements OnInit {
     relatedPharmacy: RelatedPharmacy;
     relatedCD4: RelatedCD4;
     relatedViralLoad: RelatedViralLoad;
-    communityPharmacies: CommunityPharmacy[];
+    dddOutlets: DDDOutlet[];
     states: any[] = [];
     lgas: any[];
     dmocTypes: Dmoc[] = [];
@@ -51,10 +43,17 @@ export class DevolveEditComponent implements OnInit {
     state: any;
     lga: any;
     devolveDates: Moment[] = [];
-    enableCommunityPharmacy = false;
+    enableDDDOutlet = false;
+    enableRefillGroup = false;
     properties: Array<CardViewItem> = [];
     minDate: Moment;
     minDiscontinued: Moment;
+    refillClubs: string[] = [];
+    filteredRefillClubs: string[] = [];
+    refillClub: string;
+    dddOutletType: string;
+    lgaId: number;
+    outletRequired = false;
 
     constructor(private pharmacyService: PharmacyService,
                 private devolveService: DevolveService,
@@ -92,6 +91,19 @@ export class DevolveEditComponent implements OnInit {
             name: 'S-CARG',
             value: 'S_CARG'
         });
+        this.dmocTypes.push({
+            name: 'Home Refill',
+            value: 'HOME_DELIVERY'
+        });
+        this.dmocTypes.push({
+            name: 'DARF',
+            value: 'DARF'
+        });
+
+        this.devolveService.getStates().subscribe(res => {
+            this.states = res;
+        });
+
         this.activatedRoute.data.subscribe(({entity}) => {
             this.entity = !!entity && entity.body ? entity.body : entity;
             if (this.entity === undefined) {
@@ -124,13 +136,16 @@ export class DevolveEditComponent implements OnInit {
                     });
                 }
 
-                if (this.entity.communityPharmacy) {
-                    this.enableCommunityPharmacy = true;
-                    this.devolveService.getStateByLga(this.entity.communityPharmacy.lga.id).subscribe(res => {
+                if (this.entity.dddOutlet) {
+                    this.enableDDDOutlet = true;
+                    this.dddOutletType = this.entity.dddOutlet.type;
+                    this.dddOutletChanged(this.entity.dddOutlet);
+
+                    this.devolveService.getStateByLga(this.entity.dddOutlet.lga.id).subscribe(res => {
                         this.state = res;
-                        this.lga = this.entity.communityPharmacy.lga;
-                        this.lgaChanged(this.lga.id);
                         this.stateChanged(this.state.id);
+                        this.lga = this.entity.dddOutlet.lga;
+                        this.lgaChanged(this.lga.id);
                     });
                 }
 
@@ -140,15 +155,26 @@ export class DevolveEditComponent implements OnInit {
                     this.minDiscontinued = this.entity.dateDevolved.clone().add(1, 'day');
                     this.minDate = this.entity.dateDevolved.clone().add(2, 'day');
                 }
-            }
 
-            this.devolveService.getStates().subscribe(res => this.states = res);
+                if (this.entity.extra) {
+                    this.refillClub = this.entity.extra.refillClub;
+                    this.enableRefillGroup = this.entity.dmocType.includes('CAR');
+                }
+            }
         });
+
+        this.devolveService.getRefillClubs().subscribe(res => this.refillClubs = res);
     }
 
     dateDiscontinuedChanged() {
         if (this.entity.dateDiscontinued) {
             this.minDate = this.entity.dateDiscontinued.clone().add(1, 'day');
+        }
+    }
+
+    change(input: string) {
+        if (input) {
+            this.filteredRefillClubs = this.refillClubs.filter(f => f.toLowerCase().includes(input.toLowerCase()));
         }
     }
 
@@ -168,36 +194,66 @@ export class DevolveEditComponent implements OnInit {
     }
 
     lgaChanged(id) {
-        this.devolveService.getCommunityPharmaciesByLga(id).subscribe(res => this.communityPharmacies = res);
+        this.lgaId = id;
+        if (this.entity.dddOutlet && id !== this.entity.dddOutlet.lga.id) {
+            this.entity.dddOutlet = undefined;
+        }
+        this.devolveService.getDDDOutletsByTypeAndLga(this.dddOutletType, id).subscribe(res => this.dddOutlets = res);
     }
 
-    communityPharmacyChanged(communityPharmacy: CommunityPharmacy) {
+    dddOutletChanged(outlet: DDDOutlet) {
         this.properties = [];
         this.properties.push(new CardViewTextItemModel({
             key: 'add',
             label: 'Address',
-            value: communityPharmacy.address
+            value: outlet.address
         }));
         this.properties.push(new CardViewTextItemModel({
             key: 'phone',
             label: 'Telephone Number',
-            value: communityPharmacy.phone
+            value: outlet.phone
         }));
         this.properties.push(new CardViewTextItemModel({
             key: 'email',
             label: 'Email',
-            value: communityPharmacy.email
+            value: outlet.email
         }));
     }
 
     dmocChanged(dmocType: string) {
-        this.enableCommunityPharmacy = dmocType === 'CPARP';
+        switch (dmocType) {
+            case 'CPARP':
+                this.dddOutletType = 'CPARP';
+                break;
+            case 'CARC':
+                this.dddOutletType = 'CARC';
+                break;
+            case 'FAST_TRACK':
+                this.dddOutletType = 'Fast Track';
+                break;
+            case 'S_CARG':
+                this.dddOutletType = 'S-CARG';
+                break;
+            case 'F_CARG':
+                this.dddOutletType = 'F-CARG';
+                break;
+            case 'ARC':
+                this.dddOutletType = 'ARC';
+                break;
+            case 'HOME_REFILL':
+                this.dddOutletType = 'Home Delivery';
+                break;
+            default:
+                this.dddOutletType = dmocType;
+        }
+        this.enableDDDOutlet = !!this.dddOutletType;
+        this.lgaChanged(this.lgaId);
+        this.outletRequired = ['CPARP', 'DARF'].includes(this.entity.dmocType);
     }
 
     dateDevolvedChanged(date: Moment) {
         this.minNextAppointment = date.clone().add(7, 'days');
         this.maxNextVisit = date.clone().add(3, 'months');
-        console.log('Dates', this.minNextAppointment, this.maxNextVisit);
         this.updateRelated();
     }
 
@@ -238,6 +294,10 @@ export class DevolveEditComponent implements OnInit {
         // this.progressBar.mode = 'indeterminate';
         this.appLoaderService.open('Saving visit...');
         this.isSaving = true;
+        if (!this.entity.extra) {
+            this.entity.extra = {};
+        }
+        this.entity.extra.refillClub = this.refillClub;
         if (this.entity.id !== undefined) {
             this.subscribeToSaveResponse(this.devolveService.update(this.entity));
         } else {

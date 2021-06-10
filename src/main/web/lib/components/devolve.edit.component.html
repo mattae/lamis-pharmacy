@@ -167,20 +167,39 @@
                                         before {{minNextAppointment | date: 'dd MMM, yyyy'}}
                                     </mat-error>
                                     <mat-error
-                                            *ngIf="visit3.errors && (visit3.dirty || visit3.touched) && (visit3.errors.max)">
+                                        *ngIf="visit3.errors && (visit3.dirty || visit3.touched) && (visit3.errors.max)">
                                         Date of next Clinic/Lab cannot be after {{maxNextVisit | date: 'dd NNN, yyyy'}}
                                     </mat-error>
                                 </mat-form-field>
                             </div>
                         </div>
                     </ng-container>
-                    <ng-container *ngIf="enableCommunityPharmacy">
+                    <ng-container *ngIf="enableRefillGroup">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <mat-form-field class="full-width">
+                                    <mat-label>Refill Club</mat-label>
+                                    <input matInput type="text" placeholder="Refill Club"
+                                           required name="fac" #fac="ngModel"
+                                           [(ngModel)]="refillClub"
+                                           (input)="change($event.target.value)"
+                                           [matAutocomplete]="auto">
+                                    <mat-autocomplete #auto="matAutocomplete">
+                                        <mat-option *ngFor="let club of filteredRefillClubs"
+                                                    [value]="club">{{club}}</mat-option>
+                                    </mat-autocomplete>
+                                </mat-form-field>
+                            </div>
+                        </div>
+                    </ng-container>
+                    <ng-container *ngIf="enableDDDOutlet">
                         <div class="row">
                             <div class="col-md-6">
                                 <mat-form-field class="full-width">
                                     <mat-label>State of Residence</mat-label>
                                     <mat-select name="state"
                                                 [(ngModel)]="state"
+                                                [compareWith]="entityCompare"
                                                 (selectionChange)="stateChanged($event.value.id)">
                                         <mat-option></mat-option>
                                         <mat-option *ngFor="let state of states"
@@ -192,6 +211,7 @@
                                 <mat-form-field class="full-width">
                                     <mat-label>LGA of Residence</mat-label>
                                     <mat-select name="lga" [(ngModel)]="lga"
+                                                [compareWith]="entityCompare"
                                                 (selectionChange)="lgaChanged($event.value.id)">
                                         <mat-option></mat-option>
                                         <mat-option *ngFor="let lga of lgas" [value]="lga">{{lga.name}}</mat-option>
@@ -202,18 +222,19 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <mat-form-field class="full-width">
-                                    <mat-label>Community Pharmacy</mat-label>
-                                    <mat-select name="pharm" [(ngModel)]="entity.communityPharmacy" required
+                                    <mat-label>DDD Outlet</mat-label>
+                                    <mat-select name="pharm" [(ngModel)]="entity.dddOutlet"
                                                 #pharm="ngModel"
-                                                (selectionChange)="communityPharmacyChanged($event.value)"
+                                                [required]="outletRequired"
+                                                (selectionChange)="dddOutletChanged($event.value)"
                                                 [compareWith]="entityCompare">
                                         <mat-option></mat-option>
-                                        <mat-option *ngFor="let pharmacy of communityPharmacies"
+                                        <mat-option *ngFor="let pharmacy of dddOutlets"
                                                     [value]="pharmacy">{{pharmacy.name}}</mat-option>
                                     </mat-select>
                                     <mat-error
-                                            *ngIf="pharm.errors && (pharm.dirty || pharm.touched) && (pharm.errors.required)">
-                                        Community Pharmacy is required
+                                        *ngIf="pharm.errors && (pharm.dirty || pharm.touched) && (pharm.errors.required)">
+                                        DDD Outlet is required
                                     </mat-error>
                                 </mat-form-field>
                             </div>

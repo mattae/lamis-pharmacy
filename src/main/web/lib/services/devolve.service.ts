@@ -5,14 +5,7 @@ import {DATE_FORMAT, SERVER_API_URL_CONFIG, ServerApiUrlConfig} from '@lamis/web
 import {map} from 'rxjs/operators';
 import * as moment_ from 'moment';
 import {Moment} from 'moment';
-import {
-    CommunityPharmacy,
-    Devolve,
-    RelatedCD4,
-    RelatedClinic,
-    RelatedPharmacy,
-    RelatedViralLoad
-} from '../model/pharmacy.model';
+import {DDDOutlet, Devolve, RelatedCD4, RelatedClinic, RelatedPharmacy, RelatedViralLoad} from '../model/pharmacy.model';
 
 const moment = moment_;
 
@@ -57,6 +50,10 @@ export class DevolveService {
         return this.http.delete<any>(`${this.resourceUrl}/${id}`, {observe: 'response'});
     }
 
+    getRefillClubs(): Observable<string[]> {
+        return this.http.get<string[]>(`${this.resourceUrl}/refill-clubs`, {observe: 'body'});
+    }
+
     getDevolveDatesByPatient(patientId: number) {
         return this.http.get<Moment[]>(`${this.resourceUrl}/patient/${patientId}/visit-dates`)
             .pipe(map((res) => {
@@ -74,8 +71,8 @@ export class DevolveService {
         return this.http.get<any[]>(`/api/provinces/state/${id}`);
     }
 
-    getCommunityPharmaciesByLga(id) {
-        return this.http.get<CommunityPharmacy[]>(`${this.resourceUrl}/community-pharmacies/lga/${id}`);
+    getDDDOutletsByTypeAndLga(type, id) {
+        return this.http.get<DDDOutlet[]>(`${this.resourceUrl}/ddd-outlets/type/${type}/lga/${id}`);
     }
 
     getRelatedPharmacy(devolveId: number, patientId: number, date: Moment) {
@@ -129,10 +126,14 @@ export class DevolveService {
     protected convertDateFromClient(devolve: Devolve): Devolve {
         const copy: Devolve = Object.assign({}, devolve, {
             dateDevolved: devolve.dateDevolved != null && devolve.dateDevolved.isValid() ? devolve.dateDevolved.format(DATE_FORMAT) : null,
-            dateNextClinic: devolve.dateNextClinic != null && devolve.dateNextClinic.isValid() ? devolve.dateNextClinic.format(DATE_FORMAT) : null,
-            dateNextRefill: devolve.dateNextRefill != null && devolve.dateNextRefill.isValid() ? devolve.dateNextRefill.format(DATE_FORMAT) : null,
-            dateDiscontinued: devolve.dateDiscontinued != null && devolve.dateDiscontinued.isValid() ? devolve.dateDiscontinued.format(DATE_FORMAT) : null,
-            dateReturnedToFacility: devolve.dateReturnedToFacility != null && devolve.dateReturnedToFacility.isValid() ? devolve.dateReturnedToFacility.format(DATE_FORMAT) : null
+            dateNextClinic: devolve.dateNextClinic != null && devolve.dateNextClinic.isValid() ?
+                devolve.dateNextClinic.format(DATE_FORMAT) : null,
+            dateNextRefill: devolve.dateNextRefill != null && devolve.dateNextRefill.isValid() ?
+                devolve.dateNextRefill.format(DATE_FORMAT) : null,
+            dateDiscontinued: devolve.dateDiscontinued != null && devolve.dateDiscontinued.isValid() ?
+                devolve.dateDiscontinued.format(DATE_FORMAT) : null,
+            dateReturnedToFacility: devolve.dateReturnedToFacility != null && devolve.dateReturnedToFacility.isValid() ?
+                devolve.dateReturnedToFacility.format(DATE_FORMAT) : null
         });
         return copy;
     }

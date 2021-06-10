@@ -12,7 +12,8 @@ import {
     PharmacyLine,
     Regimen,
     RegimenInfo,
-    RegimenType, StatusHistory
+    RegimenType,
+    StatusHistory
 } from '../model/pharmacy.model';
 import * as moment_ from 'moment';
 import {Moment} from 'moment';
@@ -79,6 +80,19 @@ export class PharmacyService {
                     return res;
                 })
             );
+    }
+
+    dateOfLastIptBefore(patientId: number, date: Moment) {
+        return this.http.get<Moment>(`${this.resourceUrl}/patient/${patientId}/last-ipt-at/${date.format(DATE_FORMAT)}`)
+            .pipe(map(res => res != null ? moment(res) : null));
+    }
+
+    saveTptCompletion(patientId: number, dateOfCompletion: Moment) {
+        return this.http.get(`${this.resourceUrl}/patient/${patientId}/complete-tpt/${dateOfCompletion.format(DATE_FORMAT)}`);
+    }
+
+    hasUncompletedIptAfter(patientId: number, date: Moment) {
+        return this.http.get<Moment>(`${this.resourceUrl}/patient/${patientId}/uncompleted-ipt-after/${date.format(DATE_FORMAT)}`);
     }
 
     hasDeadStatus(puuid: string) {

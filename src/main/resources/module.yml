@@ -1,13 +1,15 @@
 basePackage: org.fhi360.lamis.modules.pharmacy
 name: LAMISPharmacyModule
-dependencies: {LAMISPatientModule: 1.0.0}
+dependencies: { LAMISPatientModule: 1.8.0 }
 store: true
-umdLocation: /across/resources/static/pharmacy/js/bundles/lamis-pharmacy-1.4.0.umd.js
+umdLocation: /across/resources/static/pharmacy/js/bundles/lamis-pharmacy.umd.js?v=1.8.4
 webModules:
-  - breadcrumb: PHARMACY
-    name: PharmacyModule
-    path: pharmacies
-    position: 99
-  - name: DevolveModule
-    path: devolves
-    breadcrumb: DEVOLVE
+    -   breadcrumb: PHARMACY
+        name: PharmacyModule
+        path: pharmacies
+        position: 99
+    -   name: DevolveModule
+        path: devolves
+        breadcrumb: DEVOLVE
+    -   name: TptModule
+        path: tpt-completion

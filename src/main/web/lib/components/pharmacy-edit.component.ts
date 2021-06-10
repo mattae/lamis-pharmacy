@@ -57,6 +57,9 @@ export class PharmacyEditComponent implements OnInit {
     iptSelected = false;
     ipt: Ipt = {};
     deadStatus: StatusHistory;
+    lastIptDate: Moment;
+    minIptCompletion: Moment;
+    uncompletedIpt: boolean;
 
     constructor(private pharmacyService: PharmacyService,
                 protected notification: NotificationService,
@@ -97,6 +100,7 @@ export class PharmacyEditComponent implements OnInit {
             });
 
             if (this.entity.id) {
+                this.updateMinDates(this.entity.dateVisit);
                 if (this.entity.extra && this.entity.extra.ipt) {
                     this.ipt = Object.assign({}, this.entity.extra.ipt, {
                         dateCompleted: this.entity.extra.ipt.dateCompleted != null ? moment(this.entity.extra.ipt.dateCompleted) : null
@@ -110,9 +114,7 @@ export class PharmacyEditComponent implements OnInit {
                     r.morning = r.morning || 0;
                     r.afternoon = r.afternoon || 0;
                     r.evening = r.evening || 0;
-                    if (r.regimen_type_id === 15) {
-                        this.iptSelected = true;
-                    }
+                    this.iptSelected = r.regimen_type_id === 15;
                     r.quantity = ((r.morning || 0) + (r.afternoon || 0) + (r.evening || 0)) * r.duration;
 
                     this.pharmacyService.getRegimenById(r.regimen_id).subscribe(res => {
@@ -126,9 +128,18 @@ export class PharmacyEditComponent implements OnInit {
                     return r;
                 })];
 
-                this.entity.duration = this.entity.lines.map(r => r.duration)
+                this.entity.duration = this.entity.lines.filter(r => {
+                    return r.regimen_type_id === 1 || r.regimen_type_id === 2 || r.regimen_type_id === 3
+                        || r.regimen_type_id === 4 || r.regimen_type_id === 14;
+                }).map(r => r.duration)
                     .sort((r1, r2) => r1 - r2)
                     .pop();
+
+                if (!this.entity.duration) {
+                    this.entity.duration = this.entity.lines.map(r => r.duration)
+                        .sort((r1, r2) => r1 - r2)
+                        .pop();
+                }
 
                 this.pharmacyService.getDevolvement(this.entity.patient.id, this.entity.dateVisit).subscribe(res => {
                     this.devolve = res;
@@ -140,13 +151,24 @@ export class PharmacyEditComponent implements OnInit {
 
     dateVisitChanged(date: Moment) {
         this.entity.nextAppointment = this.suggestedNextAppointment();
+        this.updateMinDates(date);
+    }
+
+    updateMinDates(date: Moment) {
         this.minNextAppointment = this.entity.nextAppointment.clone().subtract(7, 'days');
-        this.maxNextVisit = this.entity.nextAppointment.clone().add(8, 'months');
+        this.maxNextVisit = this.entity.nextAppointment.clone().add(7, 'months');
         this.pharmacyService.getDevolvement(this.entity.patient.id, this.entity.dateVisit).subscribe(res => {
             this.devolve = res;
             this.updateDmocType();
         });
 
+        this.pharmacyService.dateOfLastIptBefore(this.entity.patient.id, date).subscribe(res => {
+            this.lastIptDate = res;
+            this.minIptCompletion = this.lastIptDate.clone().add(15, 'days');
+            this.pharmacyService.hasUncompletedIptAfter(this.entity.patient.id, res).subscribe(r => {
+                this.uncompletedIpt = r && this.lastIptDate.add(6, 'months').isBefore(date);
+            });
+        });
     }
 
     suggestedNextAppointment(): Moment {
@@ -187,6 +209,9 @@ export class PharmacyEditComponent implements OnInit {
             case 'MMS':
                 type = 'MMS';
                 break;
+            case 'HOME_REFILL':
+                type = 'Home Refill';
+                break;
         }
         this.dmocType = type;
     }
@@ -220,7 +245,10 @@ export class PharmacyEditComponent implements OnInit {
         if (!this.entity.extra) {
             this.entity.extra = {};
         }
-        if (this.iptSelected && this.ipt) {
+        if (!!this.ipt) {
+            if (this.ipt.type) {
+                this.ipt.dateCompleted = null;
+            }
             this.entity.extra.ipt = Object.assign({}, this.ipt, {
                 dateCompleted: this.ipt.dateCompleted != null && this.ipt.dateCompleted.isValid() ?
                     this.ipt.dateCompleted.format(DATE_FORMAT) : null
@@ -276,10 +304,6 @@ export class PharmacyEditComponent implements OnInit {
         } else {
             this.entity.mmdType = null;
         }
-
-        if (this.entity.dateVisit) {
-            this.ipt['dateCompleted'] = this.entity.dateVisit.clone().add(duration, 'days');
-        }
     }
 
     iptTypes() {
@@ -288,9 +312,7 @@ export class PharmacyEditComponent implements OnInit {
 
     regimenChange(event) {
         this.selectedRegimens.forEach(regimen => {
-            if (regimen.regimenType.id === 15) {
-                this.iptSelected = true;
-            }
+            this.iptSelected = regimen.regimenType.id === 15;
             this.pharmacyService.getDrugsByRegimen(regimen.id).subscribe((res: DrugDTO[]) => {
                 res.forEach((drug: DrugDTO) => {
                     if (!this.rows.map(r => r.description).includes(drug.drug.name)) {
@@ -330,11 +352,6 @@ export class PharmacyEditComponent implements OnInit {
                 parseInt(this.rows[rowIndex]['afternoon'] + '' || '0', 10) +
                 parseInt(this.rows[rowIndex]['evening'] + '' || '0', 10);
             this.rows[rowIndex]['quantity'] = (total * this.entity.duration);
-        }
-        if (cell === 'duration' && this.rows[rowIndex].regimen_type_id === 15) {
-            if (this.entity.dateVisit) {
-                this.ipt['dateCompleted'] = this.entity.dateVisit.clone().add(event.target.value, 'days');
-            }
         }
         this.rows = [...this.rows];
     }

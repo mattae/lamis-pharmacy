@@ -1,0 +1,57 @@
+<div class="lamis-edit-form">
+    <div class="lamis-edit-form-container">
+        <form name="form" role="form" novalidate (ngSubmit)="save()" #tptForm="ngForm">
+            <mat-card class="default">
+                <mat-card-header>
+                </mat-card-header>
+                <mat-card-content *ngIf="patient">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <mat-form-field>
+                                <input matInput [placeholder]="'TPT Start Date'" disabled
+                                       [value]="lastIptDate | date: 'dd MMM, yyyy'">
+                            </mat-form-field>
+                        </div>
+                        <div class="col-md-6">
+                            <mat-form-field class="full-width">
+                                <mat-label>Date of TPT Completion</mat-label>
+                                <input matInput [matDatepicker]="picker"
+                                       [(ngModel)]="dateOfCompletion"
+                                       #disc="ngModel"
+                                       [min]="minIptCompletion"
+                                       [max]="today"
+                                       name="disc"
+                                       required>
+                                <mat-datepicker-toggle
+                                    matSuffix
+                                    [for]="picker">
+                                </mat-datepicker-toggle>
+                                <mat-datepicker #picker></mat-datepicker>
+                                <mat-error
+                                    *ngIf="disc.errors && (disc.dirty || disc.touched) && (disc.errors.required)">
+                                    Date of Completion is required
+                                </mat-error>
+                                <mat-error
+                                    *ngIf="disc.errors && (disc.dirty || disc.touched) && (disc.errors.min)">
+                                    Date of Completion cannot be before {{minIptCompletion | date: 'dd MMM, yyyy'}}
+                                </mat-error>
+                                <mat-error
+                                    *ngIf="disc.errors && (disc.dirty || disc.touched) && (disc.errors.max)">
+                                    Date of Completion cannot be after {{today | date: 'dd MMM, yyyy'}}
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                </mat-card-content>
+                <mat-card-actions class="lamis-edit-form-actions">
+                    <button mat-raised-button type="button" (click)="previousState()">Back</button>
+                    <button mat-raised-button color='primary'
+                            [disabled]="tptForm.invalid || isSaving"
+                            type="submit">
+                        Update
+                    </button>
+                </mat-card-actions>
+            </mat-card>
+        </form>
+    </div>
+</div>
